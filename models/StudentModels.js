@@ -13,6 +13,5 @@ const StudentSchema = new mongoose.Schema({
     // role: { type: String, required: true },
     // createdAt: { type: Date, default: Date.now }
 });
-
 const Student = mongoose.model('Student', StudentSchema);
 module.exports = Student

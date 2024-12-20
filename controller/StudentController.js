@@ -1,19 +1,28 @@
 const mongoose = require('mongoose');
 const Student = require('../models/StudentModels');
 const Book = require('../models/BookModels');
-
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const AddStudent = async (req, res) => {
     try {
-        const userData = req.body;
-        const user = await Student.create(userData);
-        res.status(201).json({ message: 'User created successfully', user });
+        const data = new User(req.body);
+        const salt = 10;
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        data.password = hashedPassword;
+        await data.save();
+        res.json({
+            message:"Successful",
+            data: data
+        })
+        // const object = await User.create(data);
+        // res.json({ "message": "object created successfully", object });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: "Internal Server Error" });
     }
-};
-
+}
 const SearchStudent = async (req, res) => {
     try {
         const userId = req.params.id;
@@ -133,7 +142,34 @@ const viewBorrowedBooks = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
+const Login = async (req, res) => {
+    try {
+        const email = req.body.email
+        // const password = req.body.password
+        const object = await User.findOne({ email: email })
+        if (object) {
+            const validate = await bcrypt.compare(req.body.password, object.password)
+            if (validate) {
+                const token = await jwt.sign({id: object.id, email:object.email},  process.env.JWT_KEY, { algorithm: 'HS256' })
+                return res.status(200).json({ message: "Login exist" , token:token })
+            }
+            else {
+                return res.status(404).json({ message: "Login not exist" })
+            }
+        }else {
+            return res.status(404).json({ message: "Invalid" })
+        }
+        // if(object.password == req.body.password){
+        // return res.status(200).json({message: "Login exist"})
+        // }
+        // else{
+        //     return res.status(404).json({message: "Login not exist"})
+        // }
+    }catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+    }
+}
 module.exports = {
     AddStudent,
     SearchStudent,
@@ -141,5 +177,6 @@ module.exports = {
     DeleteStudent,
     borrowBook,
     returnBook,
-    viewBorrowedBooks
+    viewBorrowedBooks,
+    Login
 };

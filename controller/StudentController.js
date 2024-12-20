@@ -7,13 +7,13 @@ require('dotenv').config();
 
 const AddStudent = async (req, res) => {
     try {
-        const data = new User(req.body);
+        const data = new Student(req.body);
         const salt = 10;
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         data.password = hashedPassword;
         await data.save();
         res.json({
-            message:"Successful",
+            message: "Successful",
             data: data
         })
         // const object = await User.create(data);
@@ -41,7 +41,7 @@ const updateStudent = async (req, res) => {
     try {
         const userId = req.params.id;
         const updatedData = req.body;
-        const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+        const updatedUser = await Student.findByIdAndUpdate(userId, updatedData, { new: true });
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -70,7 +70,7 @@ const borrowBook = async (req, res) => {
     try {
         const userId = req.params.id;
         const bookId = req.params.bookId;
-        console.log(bookId,'sdasdas')
+        console.log(bookId, 'sdasdas')
 
         const user = await Student.findById(userId).populate('borrowedBooks');
         if (!user) {
@@ -80,10 +80,10 @@ const borrowBook = async (req, res) => {
         if (user.borrowedBooks.length >= 3) {
             return res.status(400).json({ message: 'You cannot borrow more than 3 books' });
         }
-// const objectId = new mongoose.Types.ObjectId(bookId)
-// console.log(objectId,"sdasdas")
+        // const objectId = new mongoose.Types.ObjectId(bookId)
+        // console.log(objectId,"sdasdas")
         const book = await Book.findById(bookId);
-        console.log(book,"asdasd")
+        console.log(book, "asdasd")
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
@@ -144,32 +144,33 @@ const viewBorrowedBooks = async (req, res) => {
 };
 const Login = async (req, res) => {
     try {
-        const email = req.body.email
-        // const password = req.body.password
-        const object = await User.findOne({ email: email })
+        const email = req.body.email;
+        const password = req.body.password;
+        // console.log("Received email:", email);
+        // console.log("Received password:", password);
+
+        const object = await Student.findOne({ email: email });
         if (object) {
-            const validate = await bcrypt.compare(req.body.password, object.password)
+            if (!password || !object.password) {
+                return res.status(400).json({ message: "Password is missing" });
+            }
+
+            const validate = await bcrypt.compare(password, object.password); 
             if (validate) {
-                const token = await jwt.sign({id: object.id, email:object.email},  process.env.JWT_KEY, { algorithm: 'HS256' })
-                return res.status(200).json({ message: "Login exist" , token:token })
+                const token = await jwt.sign({ id: object.id, email: object.email }, process.env.JWT_KEY, { algorithm: 'HS256' });
+                return res.status(200).json({ message: "Login successful", token: token });
+            } else {
+                return res.status(400).json({ message: "Invalid credentials" });
             }
-            else {
-                return res.status(404).json({ message: "Login not exist" })
-            }
-        }else {
-            return res.status(404).json({ message: "Invalid" })
+        } else {
+            return res.status(404).json({ message: "Invalid credentials" });
         }
-        // if(object.password == req.body.password){
-        // return res.status(200).json({message: "Login exist"})
-        // }
-        // else{
-        //     return res.status(404).json({message: "Login not exist"})
-        // }
-    }catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal Server Error" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};   
+
 module.exports = {
     AddStudent,
     SearchStudent,

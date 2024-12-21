@@ -9,7 +9,7 @@ const AddStudent = async (req, res) => {
     try {
         const data = new Student(req.body);
         const salt = 10;
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
         data.password = hashedPassword;
         await data.save();
         res.json({
@@ -146,18 +146,16 @@ const Login = async (req, res) => {
     try {
         const email = req.body.email;
         const password = req.body.password;
-        // console.log("Received email:", email);
-        // console.log("Received password:", password);
 
         const object = await Student.findOne({ email: email });
         if (object) {
             if (!password || !object.password) {
                 return res.status(400).json({ message: "Password is missing" });
             }
-
             const validate = await bcrypt.compare(password, object.password); 
             if (validate) {
                 const token = await jwt.sign({ id: object.id, email: object.email }, process.env.JWT_KEY, { algorithm: 'HS256' });
+                console.log("Generated Token:", token);
                 return res.status(200).json({ message: "Login successful", token: token });
             } else {
                 return res.status(400).json({ message: "Invalid credentials" });

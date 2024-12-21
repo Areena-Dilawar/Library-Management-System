@@ -154,8 +154,8 @@ const Login = async (req, res) => {
             }
             const validate = await bcrypt.compare(password, object.password); 
             if (validate) {
-                const token = await jwt.sign({ id: object.id, email: object.email }, process.env.JWT_KEY, { algorithm: 'HS256' });
-                console.log("Generated Token:", token);
+                const token = await jwt.sign({ id: object.id, email: object.email }, process.env.JWT_KEY, { algorithm: 'HS256' }, {expireIn: '1h'});
+                console.log('Login Successful');
                 return res.status(200).json({ message: "Login successful", token: token });
             } else {
                 return res.status(400).json({ message: "Invalid credentials" });

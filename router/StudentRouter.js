@@ -5,7 +5,7 @@ const controller = require('../controller/StudentController')
 
 router.post('/Stu',controller.AddStudent)
 router.get('/Student_/:id',controller.SearchStudent)
-router.put('/students/:id',controller.updateStudent)
+router.put('/students/:id',authenticateToken, controller.updateStudent)
 router.delete('/STUDENT/:id',controller.DeleteStudent)
 router.post('/login', controller.Login)
 router.post('/:id/borrow/:bookId', controller.borrowBook);

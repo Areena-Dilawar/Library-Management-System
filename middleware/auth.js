@@ -13,6 +13,7 @@ function authenticateToken(req, res, next) {
             return res.status(401).json({message:"UnAuthorized!"});
         }
         console.log(data,"from JWT")
+        req.user = data;
         next();
     });
 }

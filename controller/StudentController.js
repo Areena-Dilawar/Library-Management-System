@@ -31,6 +31,9 @@ const SearchStudent = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         res.status(200).json({ message: 'User found', user });
+        //checks lgany hain ky kis function ka knsa role hai 
+        //forgot password
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });

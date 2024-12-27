@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 const Student = require('../models/StudentModels');
-const Book = require('../models/BookModels');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const AddStudent = async (req, res) => {
     try {
+        // const user = await Student.findById(req.user.id);
+        // console.log(req.user, "user from token");
+        // if (user.role !== "admin") {
+        //     return res.status(401).json({ message: "Access Denied!" });
+        // }
         const data = new Student(req.body);
         const salt = 10;
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -15,35 +19,38 @@ const AddStudent = async (req, res) => {
         res.json({
             message: "Successful",
             data: data
-        })
-        // const object = await User.create(data);
-        // res.json({ "message": "object created successfully", object });
+        });
+        console.log(data);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
-const SearchStudent = async (req, res) => {
+const SearchStudent = async (req, res, next) => {
     try {
         const userId = req.params.id;
+        const User = await Student.findById(req.user.id);
+        console.log(req.user, "user from token");
+        if (User.role !== "admin") {
+            return res.status(401).json({ message: "Access Denied!" });
+        }
         const user = await Student.findById(userId).populate('borrowedBooks');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
         res.status(200).json({ message: 'User found', user });
-        //checks lgany hain ky kis function ka knsa role hai 
-        //forgot password
-
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
 const updateStudent = async (req, res) => {
     try {
         const userId = req.params.id;
         const updatedData = req.body;
+        if (user.role !== "admin") {
+            return res.status(401).json({ message: "Access Denied!" });
+        }
         const updatedUser = await Student.findByIdAndUpdate(userId, updatedData, { new: true });
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
@@ -58,6 +65,9 @@ const updateStudent = async (req, res) => {
 const DeleteStudent = async (req, res) => {
     try {
         const userId = req.params.id;
+        if (user.role !== "admin") {
+            return res.status(401).json({ message: "Access Denied!" });
+        }
         const deletedUser = await Student.findByIdAndDelete(userId);
         if (!deletedUser) {
             return res.status(404).json({ message: 'User not found' });
@@ -110,17 +120,13 @@ const returnBook = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-
         const bookIndex = user.borrowedBooks.indexOf(bookId);
         if (bookIndex === -1) {
             return res.status(400).json({ message: 'Book not found in borrowed list' });
         }
-
         user.borrowedBooks.splice(bookIndex, 1);
         await user.save();
-
         const updatedStudent = await Student.findById(userId).populate('borrowedBooks');
-
         res.status(200).json({
             message: 'Book returned successfully',
             borrowedBooks: updatedStudent.borrowedBooks
@@ -134,7 +140,6 @@ const returnBook = async (req, res) => {
 const viewBorrowedBooks = async (req, res) => {
     try {
         const userId = req.params.id;
-
         const user = await Student.findById(userId).populate('borrowedBooks');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });

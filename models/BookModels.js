@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const bookSchema = new mongoose.Schema({
   title: { type: String, required: true },
   author: { type: String, required: true },
-  available: { type: Boolean, default: true }
+  available: { type: Boolean, default: true },
+  role: { type: String, required: true }
 });
 
 const Book = mongoose.model('Book', bookSchema);

@@ -1,18 +1,20 @@
 const Book = require('../models/BookModels')
-
 const AddBook = async (req, res) => {
     try {
         const data = req.body;
-        // if ( req.user.role == "admin") {
-        //     return res.status(401).json({ message: "Access Denied!" });
-        // }
+        console.log(req.user.role, "user from token");
+        if (req.user.role !== "admin") {
+            return res.status(401).json({ message: "Access Denied!" });
+        }
+        
         const object = await Book.create(data);
-        res.json({ "message": "object created successfully", object });
+        res.json({ message: "Book created successfully", object });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
+
 const SearchBook = async (req, res) => {
     try {
         const id = req.params.id;
@@ -26,9 +28,9 @@ const SearchBook = async (req, res) => {
 const updateBook = async (req, res) => {
     try {
         const id = req.params.id
-        // if (req.user.role !== "user") {
-        //     return res.status(401).json({ message: "Access Denied!" });
-        // }
+        if (req.user.role !== "admin") {
+            return res.status(401).json({ message: "Access Denied!" });
+        }
         const object = req.body
         const updatedBook = await Book.findByIdAndUpdate(id, object, { new: true });
         if (updatedBook === null) {

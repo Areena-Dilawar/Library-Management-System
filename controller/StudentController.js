@@ -3,14 +3,8 @@ const Student = require('../models/StudentModels');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-
 const AddStudent = async (req, res) => {
     try {
-        // const user = await Student.findById(req.user.id);
-        // console.log(req.user, "user from token");
-        // if (user.role !== "admin") {
-        //     return res.status(401).json({ message: "Access Denied!" });
-        // }
         const data = new Student(req.body);
         const salt = 10;
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -25,7 +19,7 @@ const AddStudent = async (req, res) => {
         console.error(err);
         res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
 const SearchStudent = async (req, res, next) => {
     try {
         const userId = req.params.id;
@@ -162,7 +156,7 @@ const Login = async (req, res) => {
             }
             const validate = await bcrypt.compare(password, object.password); 
             if (validate) {
-                const token = await jwt.sign({ id: object.id, email: object.email }, process.env.JWT_KEY, { algorithm: 'HS256' }, {expireIn: '1h'});
+                const token = await jwt.sign({ id: object.id, email: object.email ,role: object.role}, process.env.JWT_KEY, { algorithm: 'HS256' }, {expireIn: '2h'});
                 console.log('Login Successful');
                 return res.status(200).json({ message: "Login successful", token: token });
             } else {

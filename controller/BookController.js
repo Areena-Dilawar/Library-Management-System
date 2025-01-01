@@ -2,10 +2,10 @@ const Book = require('../models/BookModels')
 const AddBook = async (req, res) => {
     try {
         const data = req.body;
-        console.log(req.user.role, "user from token");
-        if (req.user.role !== "admin") {
-            return res.status(401).json({ message: "Access Denied!" });
-        }
+        // console.log(req.user.role, "user from token");
+        // if (req.user.role !== "admin") {
+        //     return res.status(401).json({ message: "Access Denied!" });
+        // }
         
         const object = await Book.create(data);
         res.json({ message: "Book created successfully", object });
@@ -28,9 +28,9 @@ const SearchBook = async (req, res) => {
 const updateBook = async (req, res) => {
     try {
         const id = req.params.id
-        if (req.user.role !== "admin") {
-            return res.status(401).json({ message: "Access Denied!" });
-        }
+        // if (req.user.role !== "admin") {
+        //     return res.status(401).json({ message: "Access Denied!" });
+        // }
         const object = req.body
         const updatedBook = await Book.findByIdAndUpdate(id, object, { new: true });
         if (updatedBook === null) {
@@ -45,9 +45,9 @@ const updateBook = async (req, res) => {
 const DeleteBook = async (req, res) => {
     try {
         const id = req.params.id
-        if (req.user.role !== "admin") {
-            return res.status(401).json({ message: "Access Denied!" });
-        }
+        // if (req.user.role !== "admin") {
+        //     return res.status(401).json({ message: "Access Denied!" });
+        // }
         const DeletedBook = await Book.findByIdAndDelete(id);
         if (DeletedBook === null) {
             return res.status(404).send("Book not found");

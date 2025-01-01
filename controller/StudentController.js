@@ -199,7 +199,7 @@ const sendMail = async (email, OTP) => {
         });
         const mailOptions = {
             from: 'LMS',
-            to: 'areenadilawar97@gmail.com',
+            to: 'areenadilawar@gmail.com',
             subject: 'OTP for Forget Password',
             text: `Your OTP is ${OTP}`
         };

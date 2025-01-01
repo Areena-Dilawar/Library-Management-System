@@ -3,6 +3,7 @@ const Student = require('../models/StudentModels');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const nodemailer = require('nodemailer');
 const AddStudent = async (req, res) => {
     try {
         const data = new Student(req.body);
@@ -23,11 +24,11 @@ const AddStudent = async (req, res) => {
 const SearchStudent = async (req, res, next) => {
     try {
         const userId = req.params.id;
-        const User = await Student.findById(req.user.id);
-        console.log(req.user, "user from token");
-        if (User.role !== "admin") {
-            return res.status(401).json({ message: "Access Denied!" });
-        }
+        // const User = await Student.findById(req.user.id);
+        // console.log(req.user, "user from token");
+        // if (User.role !== "admin") {
+        //     return res.status(401).json({ message: "Access Denied!" });
+        // }
         const user = await Student.findById(userId).populate('borrowedBooks');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -42,9 +43,6 @@ const updateStudent = async (req, res) => {
     try {
         const userId = req.params.id;
         const updatedData = req.body;
-        if (user.role !== "admin") {
-            return res.status(401).json({ message: "Access Denied!" });
-        }
         const updatedUser = await Student.findByIdAndUpdate(userId, updatedData, { new: true });
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
@@ -59,9 +57,9 @@ const updateStudent = async (req, res) => {
 const DeleteStudent = async (req, res) => {
     try {
         const userId = req.params.id;
-        if (user.role !== "admin") {
-            return res.status(401).json({ message: "Access Denied!" });
-        }
+        // if (user.role !== "admin") {
+        //     return res.status(401).json({ message: "Access Denied!" });
+        // }
         const deletedUser = await Student.findByIdAndDelete(userId);
         if (!deletedUser) {
             return res.status(404).json({ message: 'User not found' });
@@ -154,9 +152,9 @@ const Login = async (req, res) => {
             if (!password || !object.password) {
                 return res.status(400).json({ message: "Password is missing" });
             }
-            const validate = await bcrypt.compare(password, object.password); 
+            const validate = await bcrypt.compare(password, object.password);
             if (validate) {
-                const token = await jwt.sign({ id: object.id, email: object.email ,role: object.role}, process.env.JWT_KEY, { algorithm: 'HS256' }, {expireIn: '2h'});
+                const token = await jwt.sign({ id: object.id, email: object.email, role: object.role }, process.env.JWT_KEY, { algorithm: 'HS256' }, { expireIn: '2h' });
                 console.log('Login Successful');
                 return res.status(200).json({ message: "Login successful", token: token });
             } else {
@@ -169,8 +167,61 @@ const Login = async (req, res) => {
         console.error(err);
         res.status(500).json({ message: "Internal Server Error" });
     }
-};   
+};
 
+const forgetPassword = async (req, res) => {
+    try {
+        const user = await Student.findOne({ email: req.body.email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const OTP = await generateOTP();
+        user.otp = OTP;
+        user.save();
+        await sendMail(user.email, OTP);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+const generateOTP = async () => {
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    return otp;
+};
+const sendMail = async (email, OTP) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'areenadilawar@gmail.com',
+                pass: 'vanf dqps ivza mucv'
+            }
+        });
+        const mailOptions = {
+            from: 'LMS',
+            to: 'areenadilawar97@gmail.com',
+            subject: 'OTP for Forget Password',
+            text: `Your OTP is ${OTP}`
+        };
+        await transporter.sendMail(mailOptions);
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    const user = Student.findOne({ email: email });
+    if (user.otp !== otp) {
+        return res.status(400).json({ message: "Invalid OTP" });
+    }
+    const salt = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.newPassword = hashedPassword;
+    user.otp = null;
+    await user.save();
+    return res.status(200).json({ message: "Password reset successful" });
+};
 module.exports = {
     AddStudent,
     SearchStudent,
@@ -179,5 +230,8 @@ module.exports = {
     borrowBook,
     returnBook,
     viewBorrowedBooks,
-    Login
+    Login,
+    resetPassword,
+    forgetPassword,
+    generateOTP
 };

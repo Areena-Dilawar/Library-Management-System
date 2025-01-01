@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { type } = require('os');
 
 const StudentSchema = new mongoose.Schema({
     bookid:{ type:mongoose.Schema.Types.ObjectId,
@@ -11,6 +12,7 @@ const StudentSchema = new mongoose.Schema({
     password: { type: String, required: true },
     // age: { type: Number },
     role: { type: String, required: true },
+    otp: {type: Number, required: false},
     // createdAt: { type: Date, default: Date.now }
 });
 const Student = mongoose.model('Student', StudentSchema);

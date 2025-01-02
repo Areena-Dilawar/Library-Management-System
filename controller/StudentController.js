@@ -199,7 +199,7 @@ const sendMail = async (email, OTP) => {
         });
         const mailOptions = {
             from: 'LMS',
-            to: 'areenadilawar@gmail.com',
+            to: email,
             subject: 'OTP for Forget Password',
             text: `Your OTP is ${OTP}`
         };
@@ -212,16 +212,18 @@ const sendMail = async (email, OTP) => {
 const resetPassword = async (req, res) => {
     const { email, otp, newPassword } = req.body;
     const user = Student.findOne({ email: email });
-    if (user.otp !== otp) {
+    if (user.otp === otp) {
+        console.log(user.otp);
+        const salt = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        user.newPassword = hashedPassword;
+        user.otp = null;
+        await user.save();
+        return res.status(200).json({ message: "Password reset successful" });
+    } else {
         return res.status(400).json({ message: "Invalid OTP" });
+
     }
-    console.log(user.otp, otp);
-    const salt = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    user.newPassword = hashedPassword;
-    user.otp = null;
-    await user.save();
-    return res.status(200).json({ message: "Password reset successful" });
 };
 module.exports = {
     AddStudent,
